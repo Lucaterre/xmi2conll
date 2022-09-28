@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Terriel"
+  given-names: "Lucas"
+  orcid: "https://orcid.org/0000-0002-9189-258X"
+title: "xmi2conll"
+version: 0.1.0
+date-released: 2022-09
+url: "https://github.com/Lucaterre/xmi2conll"
