@@ -1,6 +1,6 @@
 # xmi2conll CLI
 
-![Python Version](https://img.shields.io/badge/Python-%3E%3D%203.8-%2313aab7) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PyPI version](https://badge.fury.io/py/xmi2conll.svg)](https://badge.fury.io/py/xmi2conll)
+![Python Version](https://img.shields.io/badge/Python-%3E%3D%203.7-%2313aab7) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PyPI version](https://badge.fury.io/py/xmi2conll.svg)](https://badge.fury.io/py/xmi2conll)
 
 ![logo](./docs/x2c_logo.png)
 
