@@ -72,6 +72,6 @@ Options:
 }
 ```
 
-### Licence:
+### License:
 
 This tool is distributed under MIT license.
