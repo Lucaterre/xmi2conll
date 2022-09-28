@@ -8,32 +8,39 @@ Simple CLI to convert any annotated document in UIMA CAS XMI to CONLL format (IO
 
 ### Installation:
 
-- normal (use pip):
+Start by create and activate a new environnement with virtualenv : 
+
+```bash
+virtualenv --python=/usr/bin/python3.8 venv
+source venv/bin/activate
+```
+
+then choose:
+
+- Easy way (use pip):
 
 ```bash
 pip install xmi2conll
 ```
 
-- dev:
+- Dev install:
 
 ```bash
 git clone https://github.com/Lucaterre/xmi2conll
-virtualenv --python=/usr/bin/python3.8 venv
-source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 
 ### Usage:
 
-```bash
-python x2c.py --help
-```
-
-or
-
+with pip install run:
 ```bash
 x2c --help
+```
+
+or with dev install run:
+```bash
+python x2c.py --help
 ```
 
 ```
@@ -47,7 +54,8 @@ Usage: x2c.py [OPTIONS] INPUT_XMI TYPESYSTEM
   TYPESYSTEM (str): Typesystem.xml path.
 
 Options:
-  -o, --output TEXT               output path that contains new conll.
+  -o, --output TEXT               output path that contains new conll, 
+                                  if it not specify ./output/ is auto created.
                                   [default: ./output/]
   -tn, --type_name_annotations TEXT
                                   type name of the annotations  [default: de.t
