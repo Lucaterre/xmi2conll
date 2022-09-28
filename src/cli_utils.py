@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Common code
+"""utils CLI functions
 """
 
 import time
@@ -29,7 +29,7 @@ def report_log(message: str, type_log: str ="I") -> None:
 
 
 def timing(function):
-    """A simple decorator to compute execution time of any function
+    """A decorator to compute execution time of any function
     """
     @wraps(function)
     def wrapper(*args, **kwargs):

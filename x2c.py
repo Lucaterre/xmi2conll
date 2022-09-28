@@ -32,9 +32,9 @@ from src.x2c_converters import Xmi2Conll
               type=str)
 @click.option('-s',
               '--conll_separator',
-              default=" ",
+              default="space",
               show_default=True,
-              help="Defines a separator in CONLL between mention and label eg. ' ' (space sep) or '\\t' (tab sep)",
+              help="Defines a separator in CONLL between mention and label; only 'space' or 'tab' are accepted",
               required=False,
               type=str)
 @click.option('-h',
@@ -69,7 +69,6 @@ def main(input_xmi: str,
         output=output,
         sep=conll_separator
     )
-    sys.exit()
 
 
 if __name__ == '__main__':

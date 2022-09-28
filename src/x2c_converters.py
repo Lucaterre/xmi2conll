@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
-e"e"e
+"""xmi2conll class to convert XMI to CONLL format
 """
 import os
 import sys
@@ -17,7 +16,7 @@ from src.cli_utils import report_log
 
 
 def to_text_file(method):
-    """A simple decorator that write an output of method
+    """A decorator that write an output of method
     in text file.
     """
     def out(*args):
@@ -31,16 +30,22 @@ def to_text_file(method):
 
 class Xmi2Conll:
     """
-    ded
+    Xmi2Conll ensure XMI conversion to Conll
     """
     def __init__(self,
                  xmi: str = None,
                  typesystem_input: str = None,
                  type_name_annotations: str = None,
                  output: str = "./output/",
-                 sep: str = " ") -> None:
+                 sep: str = "space") -> None:
 
-        self.conll_sep = sep
+        if sep == "space":
+            self.conll_sep = " "
+        elif sep == "tab":
+            self.conll_sep = "\t"
+        else:
+            self.conll_sep = " "
+            report_log(f"separator: {sep} is not a valid value (only 'space' or 'tab' is accept). Your sep is replace with 'space'.", type_log='W')
 
         # 1. read & check typesystem
         if typesystem_input is not None:
@@ -57,6 +62,10 @@ class Xmi2Conll:
                 self._xmi = self.open_xmi(xmi, self._typesystem)
                 self._batch_xmis.append((self.get_filename(xmi), self._xmi))
             elif os.path.isdir(self._xmi):
+                if not self._xmi.endswith('/'):
+                    self._xmi = f"{self._xmi}/"
+                else:
+                    self._xmi = self._xmi
                 self._batch_xmis = [
                     (self.get_filename(xmi),
                      self.open_xmi(self._xmi+xmi, self._typesystem))
@@ -107,19 +116,13 @@ class Xmi2Conll:
 
     @staticmethod
     def get_filename(path: str) -> str:
-        """
-
-        :param path:
-        :return:
+        """extract a filename from path without extension
         """
         return os.path.basename(os.path.splitext(path)[0])
 
     @staticmethod
     def open_typesystem(file: str) -> Union[typesystem.TypeSystem, None]:
-        """
-
-        :param file:
-        :return:
+        """check and load typesystem.xml
         """
         try:
             with open(file, 'rb') as type_sys_in:
@@ -132,13 +135,12 @@ class Xmi2Conll:
 
     @staticmethod
     def open_xmi(file: str, typesystem_in: typesystem.TypeSystem) -> Union[cas.Cas, None]:
-        """gr
+        """check and open xmi files to process
         """
         try:
             with open(file=file, mode='rb') as xmi_file:
                 xmi = load_cas_from_xmi(xmi_file, typesystem=typesystem_in, lenient=False, trusted=True)
             report_log(f"{file} is valid.", type_log="S")
-            print(type(xmi))
             return xmi
         except Exception as exception:
             report_log(f"{file} is invalid, please check : {exception}, It will "
@@ -149,23 +151,17 @@ class Xmi2Conll:
     def is_between(start: int,
                    end: int,
                    interval: tuple) -> bool:
-        """
-
-        :param start:
-        :param end:
-        :param interval:
-        :return:
+        """A help method to check if token offset is in between known
+        entities interval and return true if token is
+        a part of entity
         """
         return start >= interval[0] and end <= interval[1]
 
     def label_categorizer(self,
                           interval_token: tuple,
                           interval_label: dict) -> list:
-        """
-
-        :param interval_token:
-        :param interval_label:
-        :return:
+        """Search if token is a part of entity and returns
+        correct label
         """
         return [
             value for k, value in interval_label.items()
@@ -175,9 +171,8 @@ class Xmi2Conll:
         ]
 
     def build_coords(self) -> dict:
-        """
-
-        :return:
+        """Maps all offsets of know entities in
+        document
         """
         return {
             (
@@ -187,30 +182,36 @@ class Xmi2Conll:
 
     @to_text_file
     def conversion_process(self) -> Generator:
-        """
-
-        :return:
+        """Main process to convert xmi to conll, chunk token into
+        IOB schema.
         """
         is_first = True
+        # iterate over all sentences
         for sentence in tqdm.tqdm(
                 self._xmi.select('de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence'),
                 desc=f"processing sentences..."
         ):
+            # iterate over all tokens
             for token in self._xmi.select_covered(
                     'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token',
                     sentence):
+                # is token a part of named entity ?
                 result_cat = self.label_categorizer(
                     (token.get('begin'), token.get('end')
                      ), self.coords_ne)
+                # get textual value of token
                 mention = token.get_covered_text()
                 if len(result_cat) > 0:
                     if is_first:
+                        # B- + label
                         yield f"{mention}{self.conll_sep}{self.chunk_prefix[is_first]}{result_cat[0]}\n"
                         is_first = False
                     else:
+                        # I- + label
                         yield f"{mention}{self.conll_sep}{self.chunk_prefix[is_first]}{result_cat[0]}\n"
                 else:
+                    # O + label
                     yield f"{mention}{self.conll_sep}{self.chunk_prefix['default']}\n"
                     is_first = True
-
+            # new sentence
             yield "\n"
