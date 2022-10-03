@@ -266,3 +266,24 @@ class Xmi2Conll:
                   index=False,
                   header=False)
 
+        # clean empty values
+        data_to_write = []
+        with open(f'{self.output}{self.actual_file}.conll', mode="r", encoding='utf-8') as f_in:
+            conll = f_in.read()
+            for row in conll.splitlines():
+                rs = row.split()
+                if len(rs) == 0:
+                    data_to_write.append('\n')
+                else:
+                    # case with breaking space
+                    if len(rs) == 1 and rs[0] == "O":
+                        data_to_write.append(f' {self.conll_sep}{rs[0]}\n')
+                    else:
+                        data_to_write.append(f'{rs[0]}{self.conll_sep}{rs[1]}\n')
+
+        # write finalk output
+        with open(f'{self.output}{self.actual_file}.conll', mode="w", encoding='utf-8') as f_out:
+            for data in data_to_write:
+                f_out.write(data)
+
+
