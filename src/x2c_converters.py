@@ -4,8 +4,9 @@
 import os
 import sys
 from typing import Union
-from collections.abc import Generator
 
+import pandas as pd
+import numpy as np
 from cassis import (load_cas_from_xmi,
                     load_typesystem,
                     typesystem,
@@ -15,10 +16,11 @@ import tqdm
 from src.cli_utils import report_log
 
 
+"""
 def to_text_file(method):
-    """A decorator that write an output of method
+    ""A decorator that write an output of method
     in text file.
-    """
+    ""
     def out(*args):
         with open(file=f'{args[0].output}{args[0].actual_file}.conll',
                   mode='w',
@@ -26,6 +28,7 @@ def to_text_file(method):
             for line in method(args[0]):
                 file.write(line)
     return out
+"""
 
 
 class Xmi2Conll:
@@ -107,7 +110,9 @@ class Xmi2Conll:
                            f"to {self.actual_file}.conll in progress...", type_log='I')
                 try:
                     self.coords_ne = self.build_coords()
-                    self.conversion_process()
+                    self.mentions, self.labels = self.conversion_process()
+                    self.fast_chunk_iob()
+                    #self.conversion_process()
                     report_log(f"{self.actual_file}.conll => OK", type_log="S")
                 except Exception as exception:
                     report_log(f"{self.actual_file}.conll => NOK : {exception}", type_log="E")
@@ -180,12 +185,14 @@ class Xmi2Conll:
                 ne.get('end')): ne.value for ne in self._xmi.select(self._type_name_annotations)
         }
 
-    @to_text_file
-    def conversion_process(self) -> Generator:
-        """Main process to convert xmi to conll, chunk token into
-        IOB schema.
+    #@to_text_file
+    def conversion_process(self) -> tuple:
+        """Main process to retireve mentions and
+        labels from XMI as sequences
         """
-        is_first = True
+        # is_first = True
+        mentions, labels = [], []
+        # idx = 1
         # iterate over all sentences
         for sentence in tqdm.tqdm(
                 self._xmi.select('de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence'),
@@ -201,7 +208,11 @@ class Xmi2Conll:
                      ), self.coords_ne)
                 # get textual value of token
                 mention = token.get_covered_text()
+                mentions.append(mention)
                 if len(result_cat) > 0:
+                    # if token is labeled entity
+                    labels.append(result_cat[0])
+                    """
                     if is_first:
                         # B- + label
                         yield f"{mention}{self.conll_sep}{self.chunk_prefix[is_first]}{result_cat[0]}\n"
@@ -209,9 +220,50 @@ class Xmi2Conll:
                     else:
                         # I- + label
                         yield f"{mention}{self.conll_sep}{self.chunk_prefix[is_first]}{result_cat[0]}\n"
+                    """
                 else:
+                    # if token is not an entity
+                    labels.append("O")
                     # O + label
+                    """
                     yield f"{mention}{self.conll_sep}{self.chunk_prefix['default']}\n"
                     is_first = True
+                    """
             # new sentence
-            yield "\n"
+            #yield "\n"
+            mentions.append("BREAK")
+            labels.append("BREAK")
+        return mentions, labels
+
+    def fast_chunk_iob(self):
+        """Chunk sequences of tokens with IOB schema
+        """
+        # initialize dataframe
+        df = pd.DataFrame(list(zip(self.mentions, self.labels)), columns=[
+            "mention", "label"
+        ])
+
+        # create mask to chunk with IOB:
+        # label is not equal to 'BREAK'
+        m_break = df['label'].ne('BREAK')
+        # label is not equal to 'O'
+        m1 = m_break & df['label'].ne('O')
+        # label is not equal to 'O' and previous label equals to 'O'
+        m2 = m1 & df['label'].shift().eq('O')
+        # label is not equal to 'O' and next label is not equal to actual label
+        m3 = m1 & (df['label'].shift(1) != df['label'])
+
+        # apply masks
+        df['label'] = np.select([m3, m2, m1], ['B-', 'B-', 'I-'], '') + df['label']
+
+        # replace BREAK by empty values
+        df = df.replace('BREAK', np.NaN)
+
+        # generate an conll output
+        df.to_csv(path_or_buf=f'{self.output}{self.actual_file}_test_df.conll',
+                  encoding='utf-8',
+                  sep=self.conll_sep,
+                  index=False,
+                  header=False)
+
+

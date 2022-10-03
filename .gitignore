@@ -2,3 +2,4 @@ venv/
 test.txt
 .idea/
 __pycache__/
+output/
