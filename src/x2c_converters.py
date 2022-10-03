@@ -108,14 +108,14 @@ class Xmi2Conll:
             if self._xmi is not None:
                 report_log(f"Convert {self.actual_file}.xmi "
                            f"to {self.actual_file}.conll in progress...", type_log='I')
-                try:
-                    self.coords_ne = self.build_coords()
-                    self.mentions, self.labels = self.conversion_process()
-                    self.fast_chunk_iob()
+                #try:
+                self.coords_ne = self.build_coords()
+                self.mentions, self.labels = self.conversion_process()
+                self.fast_chunk_iob()
                     #self.conversion_process()
-                    report_log(f"{self.actual_file}.conll => OK", type_log="S")
-                except Exception as exception:
-                    report_log(f"{self.actual_file}.conll => NOK : {exception}", type_log="E")
+                report_log(f"{self.actual_file}.conll => OK", type_log="S")
+                #except Exception as exception:
+                #    report_log(f"{self.actual_file}.conll => NOK : {exception}", type_log="E")
 
         report_log(f'All finish, Please check, new file(s) in {output} dir', type_log='I')
 
@@ -272,11 +272,12 @@ class Xmi2Conll:
             conll = f_in.read()
             for row in conll.splitlines():
                 rs = row.split()
+                print(rs)
                 if len(rs) == 0:
                     data_to_write.append('\n')
                 else:
                     # case with breaking space
-                    if len(rs) == 1 and rs[0] == "O":
+                    if len(rs) == 1:
                         data_to_write.append(f' {self.conll_sep}{rs[0]}\n')
                     else:
                         data_to_write.append(f'{rs[0]}{self.conll_sep}{rs[1]}\n')
