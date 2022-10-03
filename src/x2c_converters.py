@@ -257,13 +257,12 @@ class Xmi2Conll:
         df['label'] = np.select([m3, m2, m1], ['B-', 'B-', 'I-'], '') + df['label']
 
         # replace BREAK by empty values
-        df = df.replace('BREAK', np.NaN)
+        df = df.replace('BREAK', '')
 
         # generate an conll output
-        df.to_csv(path_or_buf=f'{self.output}{self.actual_file}_test_df.conll',
+        df.to_csv(path_or_buf=f'{self.output}{self.actual_file}.conll',
                   encoding='utf-8',
                   sep=self.conll_sep,
                   index=False,
                   header=False)
-
 
